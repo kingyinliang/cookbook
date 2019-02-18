@@ -1,0 +1,222 @@
+<template lang="pug">
+    view.richInfo
+        view.item(wx:for="{{richInfo}}" wx:key="index")  
+            block(wx:if="{{item.TypeId == 1}}")      
+                view.title
+                    image.icon(src="/assets/images/recommendedDishIcon.png")
+                    text 菜品推荐
+                view.rich( class="{{expandFlag ? 'all' : ''}}")
+                    image.bigPic(wx:if="{{item.imgSrc != null}}" src="{{item.imgSrc}}")
+                    view.content
+                        block(wx:for="{{item.strList}}" wx:key="index" wx:for-item="str")
+                            text.txt1 {{str}}
+                view.expand( @tap="expandOrHide")
+                    block(wx:if="{{expandFlag}}")
+                        text 隐藏详情
+                        image(src="/assets/images/upArrow.png")
+                    block(wx:else)
+                        text 查看详情
+                        image(src="/assets/images/downArrow.png")
+            block(wx:if="{{item.TypeId == 2}}")      
+                view.title
+                    image.icon(src="/assets/images/hotShopIntroductionIcon.png")
+                    text 旺店介绍
+                view.rich.all
+                    image.bigPic(wx:if="{{item.imgSrc != null}}" src="{{item.imgSrc}}")
+                    view.content
+                        block(wx:for="{{item.strList}}" wx:key="index" wx:for-item="str")
+                            text.txt2 {{str}}
+                view.location( @tap="openShopLocation({{item}})")
+                    text 到这去
+                    image(src="/assets/images/redRightArrow.png")
+            block(wx:if="{{item.TypeId == 3}}")      
+                view.title
+                    image.icon(src="/assets/images/authorIntroductionIcon.png")
+                    text 作者介绍
+                view.rowRich
+                    image.littlePic(wx:if="{{item.imgSrc != null}}" src="{{item.imgSrc}}")
+                    view.content
+                        block(wx:for="{{item.strList}}" wx:key="index" wx:for-item="str")
+                            text.txt3 {{str}}
+
+            
+</template>
+<script>
+import wepy from 'wepy'
+import { getCaiPinRichInfoById } from '@api/request'
+import { htmlParse } from '@util/util'
+export default class richInfo extends wepy.component{
+    props = {
+        caiPinId:{
+            type:String,
+            default:""
+        }
+    }
+
+    data = {
+        richInfo:[],
+        expandFlag:false,
+        expandText:"查看详情"
+    }
+
+    watch = {
+        caiPinId(newValue) {
+            console.log(newValue)
+            if(newValue == undefined || newValue == "") {
+                return
+            }
+            this.caiPinId = newValue
+            this.updateData()
+        }
+    }
+
+    methods = {
+        expandOrHide() {
+            this.expandFlag = !this.expandFlag
+        },
+        openShopLocation(item) {
+             wx.openLocation({
+                latitude:parseFloat(item.HotelAtitude),
+                longitude:parseFloat(item.HotelLongitude),
+                scale: 18
+            })
+        }
+    }
+
+    formatData(data) {
+        let len = data.length
+        for(let i = 0; i < len; i++){        
+            let  htmlParseData = htmlParse(data[i].Content)    
+            data[i].imgSrc = htmlParseData[1]
+            data[i].strList = htmlParseData[0]  
+            // if(data[i].TypeId == 1 || data[i].TypeId == 2) {
+            //     var regex = new RegExp('<img', 'gi')
+            //     data[i].Content = data[i].Content.replace(regex, `<img class="img" style="width:355px;height:175px;"`)
+                
+            // }       
+            
+            // if(data[i].TypeId == 3) {
+            //     var regex = new RegExp('<img', 'gi')
+            //     data[i].Content = data[i].Content.replace(regex, `<img class="img" style="width:88px;height:88px;"`)
+            // }
+
+            // var regex = new RegExp('<p', 'gi')
+            // data[i].Content = data[i].Content.replace(regex, `<p class="content"`)
+
+        }
+        return data
+    }
+
+    updateData() {
+        getCaiPinRichInfoById({caiPinId:this.caiPinId}).then(res => {
+            let data = this.formatData(res)
+            this.richInfo = data
+            this.$apply()
+        })
+    }
+
+
+}
+</script>
+<style lang="stylus" scoped>
+.richInfo   
+    margin-top 10rpx
+    .item
+        display flex
+        flex-direction column
+        margin-left 20rpx
+        margin-right 20rpx
+        align-items flex-start
+        margin-top 60rpx
+        .title
+            display flex
+            flex-direction row
+            align-items center
+            margin-bottom 37rpx
+            .icon
+                width 34rpx
+                height 32rpx
+            text
+                font-size 30rpx
+                color #E92F27
+                margin-left 23rpx
+        .rich
+            display flex
+            flex-direction column            
+            height 100rpx
+            overflow hidden
+            width 100%
+            .bigPic
+                width 710rpx
+                height 350rpx
+                flex-shrink 0
+            .content
+                font-size 26rpx
+                color #3E3E3E
+                width 710rpx
+                display flex
+                flex-direction column
+                .txt2
+                    margin-top 30rpx
+        .all
+            height auto
+        .expand
+            margin-top 50rpx
+            width 100%
+            display flex
+            flex-direction row
+            justify-content center
+            align-items center
+            text
+                font-size 26rpx
+                color #E92F27
+            image
+                width 28rpx
+                height 16rpx
+                margin-left 14rpx
+        .location
+            margin-top 26rpx
+            display flex
+            flex-direction row
+            align-items  center
+            text 
+                font-size 28rpx
+                color #E92F27
+            image 
+                width 12rpx
+                height 23rpx
+                margin-left 11rpx
+        .rowRich
+            display flex
+            flex-direction row     
+            .littlePic
+                width 176rpx
+                height 176rpx
+                border-radius 50%
+            .content
+                display flex
+                flex-direction column
+                margin-left 40rpx
+                .txt3
+                    font-size 24rpx
+                    color #3E3E3E
+                    width 370rpx
+                .txt3:first-child
+                    font-size 30rpx
+                .txt3:nth-child(2)                    
+                    margin-top 14rpx
+                .txt3:nth-child(3)
+                    margin-top 14rpx
+    .rich
+        width 500rpx     
+        .self 
+            color blue
+            span 
+                color red!important
+    .test
+        width 300rpx
+        height 300rpx
+    image
+        width 30rpx
+        height 30rpx
+</style>

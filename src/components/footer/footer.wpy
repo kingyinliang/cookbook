@@ -1,0 +1,27 @@
+<template lang="pug">
+    view.footer
+        text 鲁ICP备10013060号
+</template>
+<script>
+import wepy from 'wepy'
+export default class footer extends wepy.component{
+    
+}
+</script>
+<style lang="stylus" scoped>
+.footer
+    position fixed
+    bottom 26rpx
+    width 270rpx
+    height 49rpx
+    line-height 49rpx
+    background #F8F8F8
+    border-radius 10rpx
+    text-align center
+    left  0px
+    right  0px
+    margin 0 auto
+    text 
+        font-size 22rpx
+        color #8C8C8C
+</style>

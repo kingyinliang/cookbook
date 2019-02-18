@@ -1,0 +1,61 @@
+<template lang="pug">
+    //- view.productListPage
+    //-     view.item(wx:for="{{productList}}" wx:key="index")
+    //-         image.img(src="{{item.SpecificationPicUrl}}")
+    //-         text.name {{item.ProductName}}
+    //-         view.like
+    //-             block(wx:if="{{item.IsPraise == 'f'}}")
+    //-                 image.collectIcon(src="/assets/images/unlikeIcon.png")
+    //-                 text {{item.VisitCount}}
+    //-             block(wx:else)
+    //-                 image.collectIcon( src="/assets/images/LikeIcon.png")
+    //-                 text {{item.VisitCount}}
+    <web-view src='{{url}}'></web-view>
+</template>
+<script>
+import wepy from 'wepy'
+import { getProductListById } from '@api/request'
+export default class productListPage extends wepy.page{
+    data = {
+        productList:[],
+         url:''
+    }
+
+    onLoad(options) {
+        let productId = options.productId
+        this.url = `https://jifenweixin.shinho.net.cn/#/component/dishproductlist?productId=${productId}`      //正式地址
+        //let url = `https://uatjifenweixin.shinho.net.cn/#/component/dishproductlist?productId=${item.ProductId}` //测试地址
+        console.log(this.url)
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.productListPage
+    display flex
+    flex-direction row
+    flex-wrap wrap
+    .item   
+        display flex
+        flex-direction column
+        margin-top 36rpx
+        margin-left 20rpx
+        .img
+            width 346rpx
+            height 346rpx
+            margin-bottom 18rpx
+        .name
+            font-size 28rpx
+            color #333333
+            margin-bottom 25rpx
+        .like
+            display flex
+            flex-direction row
+            align-items center
+            .collectIcon
+                width 30rpx
+                height 27rpx
+            text 
+                font-size 20rpx
+                color #8C8C8C
+                margin-left 20rpx
+</style>

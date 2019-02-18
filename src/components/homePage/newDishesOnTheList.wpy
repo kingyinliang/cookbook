@@ -1,0 +1,104 @@
+<template lang="pug">
+    view.newDishesOnTheList(wx:if="{{newDishesOnTheListData.length > 0}}")
+      text.title 上榜新菜
+      view.row
+        block(wx:for="{{newDishesOnTheListData}}" wx:key="{{index}}")
+          navigator.item( url="/pages/dishDetailsPage?caiPinId={{item.CaiPinId}}" hover-class="none")
+            image.img(src="{{item.pic}}")
+            text.name {{item.CaiPinName}}
+            view.browse
+              image.collectIcon(wx:if="{{item.IsCollect == 1}}" src="/assets/images/collectedIcon.png" @tap.stop="collect({{index}})")
+              image.collectIcon(wx:if="{{item.IsCollect == 0}}" src="/assets/images/unCollectedIcon.png" @tap.stop="collect({{index}})")
+              text {{item.LlCount}}人看过
+      video.video(src="{{videoUrl}}" controls)
+</template>
+<script>
+import wepy from 'wepy'
+import { addActionRecord } from '@api/request'
+export default class newDishesOnTheList extends wepy.component{
+    props = {
+        newDishesOnTheListData:{
+            type:Array,
+            default:[]
+        }
+    }
+
+    methods = {
+      collect(index) {
+        let state = wepy.$instance.checkUserLoginState()
+        if(!state) {
+            return 
+        }
+        let item = this.newDishesOnTheListData[index]
+        let collectState = item.IsCollect == 0 ? 1 : 0
+        let userInfo = wepy.$instance.globalData.userInfo
+        addActionRecord({	ModuleName:"菜品库",OpenId:userInfo.openId,UnionId:userInfo.unionId,RecordAction:"collect",RecordKeyType:"菜品",
+          RecordKeyId:item.CaiPinId,ActionFlag:collectState}).then(res => {
+            item.IsCollect = collectState
+            this.$apply()
+          })
+      }
+    }
+
+    data = {     
+        videoUrl:"https://s3.cn-north-1.amazonaws.com.cn/s3-010-shinho-ecshool-prd-bjs/mov/%E6%8B%9C%E5%B9%B4%E5%8E%8B%E7%BC%A9.mp4",
+    }
+
+    onLoad() {
+      console.log(this.newDishesOnTheListData)
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.newDishesOnTheList
+    display flex
+    flex-direction column
+    align-items center
+    padding-top 39rpx   
+    border-top 11rpx solid #F8F8F8
+    .title 
+      font-size 32rpx
+      color #3E3E3E
+      font-weight bold
+      width 128rpx
+      padding-bottom 13rpx
+      border-bottom 4rpx solid #E6222D
+      margin-bottom 36rpx
+    .row
+      display flex
+      flex-direction row
+      justify-content flex-start
+      align-items flex-start
+      overflow auto
+      width 100%
+      .item
+        display flex
+        flex-direction column
+        justify-content flex-start
+        align-items flex-start
+        margin-left 20rpx
+        .img
+          width 312rpx
+          height 312rpx
+          margin-bottom 18rpx
+        .name
+          font-size 28rpx
+          color #3E3E3E
+          margin-bottom 30rpx
+        .browse
+          display flex
+          flex-direction row
+          align-items center
+          .collectIcon
+            width 30rpx
+            height 27rpx
+          text 
+            font-size 20rpx
+            color #8C8C8C
+            margin-left 25rpx
+    .video
+      margin-top 60rpx
+      width 710rpx
+      height 350rpx
+      margin-bottom 32rpx
+</style>

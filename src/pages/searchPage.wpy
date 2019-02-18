@@ -1,0 +1,67 @@
+<template lang="pug">
+    view.searchPage
+        searchAndClassification( :initVal.sync="searchWord")
+        dishList( :word.sync="searchWord", :secondIdList.sync="secondIdList")
+        footer
+</template>
+<script>
+import wepy from 'wepy'    
+import SearchAndClassification from '@components/search/searchAndClassification'  
+import DishList from '@components/search/dishList'
+import Footer from '@components/footer/footer'
+export default class searchPage extends wepy.page {
+    config = {
+        navigationBarTitleText: "查询列表页"
+    }
+
+    data = {
+        searchWord:"",
+        secondIdList:""
+    }
+
+
+    events = {
+      'searchWord':(val) => {
+        console.log(val)
+        this.searchWord = val
+        this.secondIdList = ""
+      }
+    }
+
+    components = {
+        searchAndClassification:SearchAndClassification,
+        dishList:DishList,
+        footer:Footer
+    }
+
+    getOptions() {
+        let pages = getCurrentPages()
+        var currentPage = pages[pages.length - 1]
+        var options = currentPage.options 
+        return options
+    }
+
+    onShow() {
+        console.log("show")
+        let options = this.getOptions()
+        console.log(options.searchWord)
+        console.log(options.secondIdList)
+        //处理从下一个页面返回的时候传值不变，不触发watch函数，坑啊
+        this.searchWord = ""
+        this.secondIdList = ""
+        this.$apply()
+        this.searchWord = options.searchWord
+        this.secondIdList = options.secondIdList
+        this.$apply()
+    }
+
+
+    onLoad(options) {
+
+    }
+
+}
+</script>
+<style lang="stylus" scoped>
+
+</style>

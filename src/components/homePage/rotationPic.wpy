@@ -1,0 +1,64 @@
+<template lang="pug">
+    view.rotationPic
+      swiper.swiper-block(circular="true" autoplay="true" interval="5000" duration="500" indicator-dots="true" indicator-color="" indicator-active-color="#ffffff" 
+          previous-margin="20rpx" next-margin="20rpx" bindchange="swiperChange")
+        block(wx:for="{{rotationPicList}}" wx:key="{{index}}")
+          swiper-item.swiper-item
+            image(mode="aspectFill" src="{{item.PicUrl}}" class="slide-image {{swiperIndex == index ? 'active' : ''}}" @tap.stop="jumpToWebView({{item}})")
+
+</template>
+<script>
+import wepy from 'wepy'
+import { getRotationPic } from '@api/request'
+
+export default class rotationPic extends wepy.component{
+    data = {        
+      rotationPicList:[],
+      swiperIndex:0
+    }
+
+    methods = {
+      swiperChange(e) {
+        this.swiperIndex = e.detail.current
+      },
+
+      jumpToWebView(item) {
+        let url = item.Link
+        wx.navigateTo({url:`/pages/webViewPage?url=${url}`})
+      }
+    }
+
+    onLoad() {
+        getRotationPic({BannerType:3}).then(res => {
+            this.rotationPicList = JSON.parse(res)
+            console.log(this.rotationPicList)
+            this.$apply()
+        })   
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.rotationPic
+    margin-bottom 51rpx
+    .swiper-block
+      height 388rpx
+      width 100%
+    
+    .swiper-item
+      display  flex
+      flex-direction  column
+      justify-content  center
+      align-items  flex-start
+      overflow:unset
+    
+    .slide-image
+      height 328rpx
+      width  710rpx
+      border-radius  9rpx
+      z-index  1
+    
+    .active
+      transform  scale(1,1.18)
+      transition all .2s ease-in 0s
+      z-index  9999  
+</style>

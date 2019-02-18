@@ -1,0 +1,13 @@
+{
+  "description": "cookbook",
+  "setting": {
+    "urlCheck": true,
+    "es6": false,
+    "postcss": false,
+    "minified": false
+  },
+  "compileType": "miniprogram",
+  "appid": "wx0768f3d0f0a0b3b6",
+  "projectname": "cookbook",
+  "miniprogramRoot": "./dist"
+}

@@ -1,0 +1,35 @@
+<template lang="pug">
+    view.productMenuPage
+        image(src="/assets/images/productImg1.png"  @tap="jumpToWebView(0)")
+        image(src="/assets/images/productImg2.png"  @tap="jumpToWebView(1)")
+        image(src="/assets/images/productImg3.png"  @tap="jumpToWebView(2)")
+        image(src="/assets/images/productImg4.png"  @tap="jumpToWebView(3)")
+        image(src="/assets/images/productImg5.png"  @tap="jumpToWebView(4)")
+        image(src="/assets/images/productImg6.png"  @tap="jumpToWebView(5)")
+</template>
+<script>
+import wepy from 'wepy'
+export default class productMenuPage extends wepy.page{
+    config = {
+        navigationBarTitleText:"产品菜谱"
+    }
+
+    methods = {
+        jumpToWebView(index) {
+            wx.navigateTo({
+                url:`/pages/productMenuWebView?index=${index}`
+            })
+        }
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.productMenuPage
+    display flex
+    flex-direction column
+    align-items flex-start
+    image 
+        width 100%
+        height 326rpx
+        margin-top 27rpx
+</style>

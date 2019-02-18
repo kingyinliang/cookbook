@@ -1,0 +1,14 @@
+<template lang="pug">
+    <web-view src='{{url}}'></web-view>
+</template>
+<script>
+import wepy from 'wepy'
+export default class allKindsOfTastePage extends wepy.page{
+    data = {
+        url:'https://mp.weixin.qq.com/mp/homepage?__biz=MjM5MDY0NDQzOQ==&hid=1&sn=8689486d1e23845c19e3093410c3c554'
+    }
+}
+</script>
+<style lang="stylus" scoped>
+
+</style>

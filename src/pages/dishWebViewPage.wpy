@@ -1,0 +1,28 @@
+<template lang="pug">
+    <web-view src='{{url}}'></web-view>
+</template>
+<script>
+import wepy from 'wepy'
+export default class dishWebViewPage extends wepy.page{
+    data = {
+        url:""
+    }
+
+    onLoad(options) {
+        let caipinId = options.caipinId
+        let tabIndex = options.tabIndex
+        console.log(options)
+        if(tabIndex == 0) {
+            this.url = `https://jifenweixin.shinho.net.cn/#/component/starkitchendish?dishId=${caipinId}`
+        }else{
+            this.url = `https://jifenweixin.shinho.net.cn/#/component/starkitchendish?dishId=${caipinId}&dishType=1`
+        }
+        console.log(this.url)
+        
+    }
+}
+</script>
+<style lang="stylus" scoped>
+
+</style>
+

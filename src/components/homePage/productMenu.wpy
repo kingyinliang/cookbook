@@ -1,0 +1,57 @@
+<template lang="pug">
+    view.productMenu
+        navigator.header( url="/pages/productMenuPage" hover-class="none")
+          text.title 产品菜谱
+          image.in(src="/assets/images/rightArrow.png" )
+        view.row
+            image(src="/assets/images/productMenu1.png")
+            image(src="/assets/images/productMenu2.png")
+            image(src="/assets/images/productMenu3.png")
+            image(src="/assets/images/productMenu4.png")
+</template>
+<script>
+import wepy from 'wepy'
+export default class productMenu extends wepy.component{
+    
+}
+</script>
+<style lang="stylus" scoped>
+.productMenu
+    display flex
+    flex-direction column
+    align-items center
+    padding-top 39rpx 
+    border-top 11rpx solid #F8F8F8 
+    position relative
+    margin-bottom 100rpx
+    .header
+      width 100%
+      position relative
+      text-align center      
+      margin-bottom 13rpx
+      .title 
+        font-size 32rpx
+        color #3E3E3E
+        font-weight bold
+        width 128rpx
+        padding-bottom 13rpx
+        border-bottom 4rpx solid #E6222D
+      .in
+        width 16rpx
+        height 28rpx
+        position absolute
+        top 15rpx
+        right 20rpx
+    .row
+      display flex
+      flex-direction row
+      flex-wrap wrap
+      justify-content flex-start
+      align-items flex-start
+      align-self flex-start
+      image
+        width 346rpx
+        height 186rpx
+        margin-top 36rpx
+        margin-left 20rpx
+</style>

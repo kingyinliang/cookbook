@@ -1,0 +1,173 @@
+<template lang="pug">
+    view.messageInfo
+        view.title
+            image.icon(src="/assets/images/messageIcon.png")
+            text 我要留言
+        scroll-view.list-container(
+            scroll-y 
+            @scrolltolower="loadmore"
+            lower-threshold="{{updataDistance}}"
+            )
+            view.item(wx:for="{{list}}" wx:key="index")
+                view.left
+                    image(src="{{item.HeadImgUrl}}")
+                    view.content
+                        view.nickName {{item.Nickname}}
+                        view.message {{item.LiuYan}}
+                view.right
+                    view.hotelName {{item.HotelName}}
+                view.time  {{item.showDate}}
+        //- view.bottom
+        //-     textarea(placeholder="我有话要说" placeholder-class="placeholderClass" bindinput='inputChange' bindfocus='inputFocus'
+        //-         bindblur='inputBlur' auto-height value="{{textVal}}" class="{{btnFlag ? 'expand' : ''}}" cursor-spacing='100rpx')
+        //-         view.btn(wx:if="{{btnFlag}}" class="{{textVal != ''? 'active' : ''}}" @tap.stop="comment") 发送
+        //-     view.collect(wx:if="{{!btnFlag}}")
+        //-           image.collectIcon(wx:if="{{IsCollect == 1}}" src="/assets/images/collectedIcon.png" @tap.stop="collect")
+        //-           image.collectIcon(wx:if="{{IsCollect == 0}}" src="/assets/images/unCollectedIcon.png" @tap.stop="collect")
+            
+</template>
+<script>
+import wepy from 'wepy' 
+import { getMessage } from '@api/request'
+import { addLiuYanInfo } from '@api/request'
+export default class messageInfo extends wepy.component{
+
+    props = {
+        caiPinId:{
+            type:String,
+            default:""
+        }
+    }
+
+    data = {
+        updataDistance: 300, 
+        list:[],
+        pageIndex:1,
+        pageSize:10,
+        loadFinish:false
+    }
+
+    watch = {
+        caiPinId(newValue) {
+            console.log(newValue)
+            if(newValue == undefined || newValue == "") {
+                return
+            }
+            this.caiPinId = newValue
+            this.clearList()
+            this.updateList()
+        }
+
+    }
+
+    methods = {
+        loadmore() {
+            this.updateList()
+        }
+    }
+
+    clearList() {
+        console.log("clear")
+        this.loadFinish = false
+        this.pageIndex = 1  
+        this.list = []
+    }
+
+    updateList() {
+        console.log("update")
+        if(this.loadFinish) {
+            return
+        }
+        getMessage({page:this.pageIndex,pagesize:this.pageSize,KeyType:"菜品",KeyId:this.caiPinId}).then(res => {
+            let result = res
+            let list = result.data
+            let len = list.length
+            for(let i = 0; i < len; i++) {
+                list[i].showDate =  list[i].CreateDate.substr(0,list[i].CreateDate.length - 3)           
+            }
+            this.list.push.apply(this.list,list)
+            console.log(this.list)
+            if(this.pageIndex >= result.totalpage || this.pageIndex * this.pageSize >= result.totalCount) {
+                this.loadFinish = true
+            }
+            this.pageIndex++
+            this.$apply()
+        })
+    }
+
+    onLoad() {
+        
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.messageInfo
+    display flex
+    flex-direction column
+    margin-top 60rpx
+    margin-left 20rpx
+    margin-right 20rpx
+    background #ffffff
+    position relative
+    .title
+        display flex
+        flex-direction row
+        align-items center
+        margin-bottom 37rpx
+        .icon
+            width 34rpx
+            height 32rpx
+        text
+            font-size 30rpx
+            color #E92F27
+            margin-left 23rpx
+    .list-container
+        position absolute
+        left 0
+        top 60rpx
+        max-height 600rpx   
+        .item
+            display flex
+            flex-direction row
+            justify-content space-between
+            align-items flex-start
+            position relative
+            height 223rpx
+            padding-top 46rpx
+            width 100%
+            border-bottom 1px solid #F1F1F1
+            .left
+                display flex
+                flex-direction row
+                justify-content flex-start
+                align-items flex-start
+                image
+                    width 68rpx
+                    height 68rpx
+                    border-radius 50%
+                .content
+                    margin-left 23rpx
+                    display flex
+                    flex-direction column
+                    justify-content flex-start
+                    align-items flex-start  
+                    .nickName
+                        font-size 26rpx
+                        color #282828
+                        font-weight bold
+                    .message
+                        font-size 24rpx
+                        color #282828
+                        margin-top 25rpx
+            .right
+                .hotelName
+                    font-size 26rpx
+                    color #282828
+            .time 
+                position absolute
+                bottom 26rpx
+                right 0rpx
+                font-size 24rpx
+                color #A3A3A3
+   
+</style>

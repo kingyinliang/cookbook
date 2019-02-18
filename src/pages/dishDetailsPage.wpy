@@ -1,0 +1,77 @@
+<template lang="pug">
+    view.dishDetailsPage
+        view.top( @tap="hideCommentBtn")         
+            basicInfo( :info.sync="basicInfo")
+            richInfo( :caiPinId.sync="caiPinId")
+            seasoningInfo( :caiPinId.sync="caiPinId")
+            messageInfo( :caiPinId.sync="caiPinId")
+        view.bottom
+            comment( :caiPinId.sync="caiPinId", :IsCollect.sync="IsCollect")
+</template>
+<script>
+import wepy from 'wepy'
+import BasicInfo from '@components/dishDetailsPage/basicInfo'
+import RichInfo from '@components/dishDetailsPage/richInfo'
+import SeasoningInfo from '@components/dishDetailsPage/seasoningInfo'
+import MessageInfo from '@components/dishDetailsPage/messageInfo'
+import Comment from '@components/dishDetailsPage/comment'
+import { getCaiPinBasicInfoById } from '@api/request'
+export default class dishDetailsPage extends wepy.page{
+    config = {
+        navigationBarTitleText:"菜品详情页"
+    }
+
+    data = {
+        caiPinId:"",
+        basicInfo:{},
+        IsCollect:0
+    }
+
+    components = {
+        basicInfo:BasicInfo,
+        richInfo:RichInfo,
+        seasoningInfo:SeasoningInfo,
+        messageInfo:MessageInfo,
+        comment:Comment
+    }
+
+
+    events = {
+      'refreshMessageInfo':() => {
+        console.log("refreshMessageInfo")
+        this.$invoke("messageInfo","clearList")
+        this.$invoke("messageInfo","updateList")
+      }
+    }
+
+    methods = {
+        hideCommentBtn() {
+            this.$invoke("comment","hideCommentBtn")
+        }
+    }
+
+    onLoad(options) {
+        console.log(options.caiPinId)
+        this.caiPinId = options.caiPinId
+        let userInfo = wepy.$instance.globalData.userInfo
+        getCaiPinBasicInfoById({caiPinId:this.caiPinId,OpenId:userInfo.openId,UnionId:userInfo.unionId}).then(res => {
+            this.basicInfo = res[0]
+            this.IsCollect = this.basicInfo.IsCollect
+            this.$apply()
+        })
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.dishDetailsPage
+    display flex
+    flex-direction column
+    height 100vh
+    width 100vw
+    .top
+        overflow auto   
+        width 100vw
+    .bottom 
+        flex-shrink 0
+</style>
+

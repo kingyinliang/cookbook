@@ -1,0 +1,166 @@
+<template lang="pug">
+   view.comment
+      view.content
+        textarea(placeholder="我有话要说" placeholder-class="placeholderClass" bindinput='inputChange' bindfocus='inputFocus'
+            bindblur='inputBlur' value="{{textVal}}" class="{{btnFlag ? 'expand' : ''}}" cursor-spacing='60rpx' show-confirm-bar="")
+        view.collect(wx:if="{{!btnFlag}}")
+            image.collectIcon(wx:if="{{IsCollect == 1}}" src="/assets/images/collectedIcon.png" @tap.stop="collect")
+            image.collectIcon(wx:if="{{IsCollect == 0}}" src="/assets/images/unCollectedIcon.png" @tap.stop="collect")
+      view.commentBtn
+        view.btn(wx:if="{{btnFlag}}" class="{{textVal != ''? 'active' : ''}}" @tap.stop="comment") 发送
+</template>
+<script>
+import wepy from 'wepy' 
+import { addActionRecord,addLiuYanInfo } from '@api/request'
+export default class comment extends wepy.component{
+
+    props = {
+        caiPinId:{
+            type:String,
+            default:""
+        },
+        IsCollect:{
+            type:String,
+            default:0
+        }
+    }
+
+
+    data = {
+        textVal:"",
+        btnFlag:false
+    }
+
+    watch = {
+        caiPinId(newValue) {
+            console.log(newValue)
+            if(newValue == undefined || newValue == "") {
+                return
+            }
+            this.caiPinId = newValue
+        },
+
+        IsCollect(newValue) {
+            this.IsCollect = newValue
+            console.log(newValue)
+            this.$apply()
+        }        
+    }
+
+
+    hideCommentBtn() {
+        this.btnFlag = false
+        //textarea 组件bug
+        this.textVal = " "
+        this.textVal = ""
+        this.$apply()
+    }
+
+
+    methods = {
+      collect() {
+        let state = wepy.$instance.checkUserLoginState()
+        if(!state) {
+            return 
+        }
+        let collectState = this.IsCollect == 0 ? 1 : 0
+        let userInfo = wepy.$instance.globalData.userInfo
+        addActionRecord({	ModuleName:"菜品库",OpenId:userInfo.openId,UnionId:userInfo.unionId,RecordAction:"collect",RecordKeyType:"菜品",
+          RecordKeyId:this.caiPinId,ActionFlag:collectState}).then(res => {
+            this.IsCollect = collectState
+            this.$apply()
+          })
+      },
+
+      inputChange(e) {
+        this.textVal = e.detail.value
+        this.$apply()
+      },
+
+      inputFocus(e) {
+        this.btnFlag = true    
+      },
+
+      // inputBlur() {
+      //   this.btnFlag = false
+      //   this.textVal = " "
+      //   var _this = this
+      //   setTimeout(() => {
+      //       _this.textVal = ""
+      //   }, 300)
+      //   this.$apply()
+      // },
+
+      comment() {
+        let state = wepy.$instance.checkUserLoginState()
+        if(!state) {
+            return 
+        }
+        let userInfo = wepy.$instance.globalData.userInfo
+          addLiuYanInfo({OpenId:userInfo.openId,UnionId:userInfo.unionId,KeyType:"菜品",
+            KeyId:this.caiPinId,LiuYan:this.textVal,ParentId:0}).then(res => {
+                console.log(res)
+                this.hideCommentBtn()
+                this.$emit('refreshMessageInfo')
+          })
+      }
+
+    }
+
+
+}
+</script>
+<style lang="stylus" scoped>
+.comment
+    display flex
+    flex-direction column
+    .content
+        display flex
+        flex-direction row        
+        padding-top 20rpx 
+        padding-bottom 20rpx
+        padding-left 20rpx
+        background white
+        border-top 1px solid #F1F1F1
+        textarea
+          color #000000
+          width 550rpx
+          height 36rpx
+          background #F9F9F9
+          padding-left 20rpx
+          padding-top 20rpx
+          padding-bottom 20rpx
+          font-size 25rpx
+          position relative
+
+        .expand
+            height 86rpx
+            width 700rpx
+        .placeholderClass
+            font-size 25rpx
+            color #8C8C8C
+        .collect
+          display flex
+          flex-direction row
+          align-items center   
+          margin-left 40rpx
+          .collectIcon
+            width 40rpx
+            height 39rpx
+    .commentBtn
+        display flex
+        flex-direction row
+        justify-content flex-end
+        padding-right 20rpx
+        .btn            
+            width 100rpx
+            height 60rpx
+            line-height 60rpx
+            text-align center
+            border-radius 10rpx
+            background  #7f7f7f
+            font-size 25rpx
+            color white
+        .active
+            background #e93429
+</style>

@@ -1,0 +1,41 @@
+<template lang="pug">
+  button(open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="getUserInfo")   获取用户信息
+
+</template>
+<script>
+import wepy from 'wepy'
+import {  decryptData } from '@api/request'
+export default class authorizePage extends wepy.page{
+  config = {
+    navigationBarTitleText:"授权页"
+  }
+
+  methods = {
+    getUserInfo(e) {
+      console.log(e)
+      console.log(e.detail)
+      if(e.detail.iv == undefined) {
+        console.log("授权失败")
+        wx.redirectTo({url:"/pages/mainPage"})
+        return
+      }
+      let encryptedData = e.detail.encryptedData
+      let iv = e.detail.iv
+      let userInfo = wepy.$instance.globalData.userInfo
+      decryptData({encryptedData:encryptedData,iv:iv,openId:userInfo.openId}).then(res => {
+        console.log(res)
+        if(res.unionId != undefined) {
+          userInfo.unionId = res.unionId
+          wx.setStorageSync('unionId',userInfo.unionId)          
+          wx.setStorageSync('openId',userInfo.openId)
+        }
+        wx.redirectTo({url:"/pages/mainPage"})
+      })
+    }
+  }
+}
+</script>
+<style lang="stylus" scoped>
+
+</style>
+

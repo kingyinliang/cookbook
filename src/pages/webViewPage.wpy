@@ -1,0 +1,19 @@
+<template lang="pug">
+   web-view(src="{{url}}")
+</template>
+<script>
+import wepy from 'wepy'
+export default class webViewPage extends wepy.page{
+    data = {
+        url:""
+    }
+
+    onLoad(options) {
+      this.url = options.url
+      console.log(options)
+    }
+}
+</script>
+<style lang="stylus" scoped>
+
+</style>

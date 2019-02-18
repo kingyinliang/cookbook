@@ -1,0 +1,101 @@
+
+<template lang="pug">
+  view.homePage 
+    searchAndClassification(showAssociationalWord="true",:initVal="")
+    rotationPic
+    menu
+    newDishesOnTheList(:newDishesOnTheListData.sync="newDishesOnTheListData")
+    popularityOfTheMonth
+    hotSale(:hotSaleData.sync="hotSaleData")
+    productMenu
+</template>
+
+
+<script>
+  import wepy from 'wepy'    
+  import SearchAndClassification from '@components/search/searchAndClassification'  
+  import RotationPic from '@components/homePage/rotationPic'
+  import Menu from '@components/homePage/menu'
+  import NewDishesOnTheList from '@components/homePage/newDishesOnTheList'
+  import PopularityOfTheMonth from '@components/homePage/popularityOfTheMonth'
+  import HotSale from '@components/homePage/hotSale'
+  import ProductMenu from '@components/homePage/productMenu'
+  import { getNewDishes } from '@api/request'
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '欣和餐饮服务'
+    }
+
+    data = {
+      newDishesOnTheListData:[],
+      hotSaleData:[],
+    }
+
+    components = {
+        searchAndClassification:SearchAndClassification,        
+        rotationPic:RotationPic,
+        menu: Menu,
+        newDishesOnTheList:NewDishesOnTheList,
+        popularityOfTheMonth:PopularityOfTheMonth,
+        hotSale:HotSale,
+        productMenu:ProductMenu
+    }
+
+    events = {
+      'searchWord':(val) => {
+        console.log(val)
+        wx.navigateTo({url:`searchPage?searchWord=${val}`})
+      }
+    }
+
+    classifyPlates(data) {
+      console.log(data)
+      let newDishesOnTheListData = []
+      let hotSaleData = [] 
+      let len = data.length
+      for(let i = 0; i < len; i++) {
+        if(data[i].BanKuaiName == "上榜新菜") {
+          if(data[i].Images != null) {
+            data[i].pic = data[i].Images.split(",")[0]
+          }
+          newDishesOnTheListData.push(data[i])
+        }
+
+        if(data[i].BanKuaiName == "旺店热卖") {
+          if(data[i].Images != null) {
+            data[i].pic = data[i].Images.split(",")[0]
+          }
+          hotSaleData.push(data[i])
+        }
+      }
+      this.newDishesOnTheListData = newDishesOnTheListData
+      this.hotSaleData = hotSaleData
+      console.log(this.newDishesOnTheListData)
+      console.log(this.hotSaleData)
+      this.$apply()
+    }
+
+    onLoad() {
+ 
+    }
+
+    onShow() {
+      let userInfo = wepy.$instance.globalData.userInfo
+      getNewDishes({OpenId:userInfo.openId,UnionId:userInfo.unionId}).then(res => {
+        let newDishes = res
+        let len = newDishes.length
+        this.classifyPlates(newDishes)
+      })
+      this.$invoke("popularityOfTheMonth","init")
+      this.$invoke("searchAndClassification", "clear")
+    }
+
+  }
+</script>
+<style lang="stylus">
+.homePage
+  display flex
+  flex-direction column
+  background white
+</style>
+

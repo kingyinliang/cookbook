@@ -1,0 +1,252 @@
+<template lang="pug">
+    view.starCuisinePage
+        searchAndClassification( :initVal.sync="searchWord")
+        view.starCuisineList
+            view.tab
+                view.tab-item-left(class="{{tabIndex===0?'focus':''}}" data-index=0 @tap="clickTab") 导师团
+                view.tab-item-right(class="{{tabIndex===1?'focus':''}}" data-index=1 @tap="clickTab") 星厨团
+                view.tab-sign(class="left-{{tabIndex}}")
+            scroll-view.list-container(
+                scroll-y 
+                @scrolltolower="loadmore"
+                lower-threshold="{{updataDistance}}"
+                )
+                view.list
+                    repeat(for="{{list}}" key="index")
+                        view.item
+                            view.header 
+                                image.img(src="{{item.HeadPicUrl}}" mode="aspectFit")
+                                view.col
+                                    text.name {{item.ChefName}}
+                                    view.row
+                                        text.position {{item.Position}}
+                                        text.hotelName {{item.HotelName}}
+                            image.dishPic(src="{{item.DishPicUrl}}" @tap="jumpToDetail({{item}})")
+                            view.browse
+                                view.left
+                                    text.dishName {{item.DishName}}
+                                view.right
+                                    image.collectIcon(wx:if="{{item.IsCollect == 1}}" src="/assets/images/collectedIcon.png"  @tap="collect({{index}})")
+                                    image.collectIcon(wx:if="{{item.IsCollect == 0}}" src="/assets/images/unCollectedIcon.png"  @tap="collect({{index}})")
+                                    text.count {{item.LyCount}}人看过
+</template>
+<script>
+import wepy from 'wepy'
+import { getXcxcCaiPinList,addActionRecord } from '@api/request'
+import SearchAndClassification from '@components/search/searchAndClassification'  
+export default class starCuisinePage extends wepy.page{
+    config = {
+        navigationBarTitleText:"星厨星菜"
+    }
+
+    data = {        
+        tabIndex: 0,
+        pageIndex:1,
+        pageSize:10,
+        loadFinish:false,
+        updataDistance: 300, 
+        list:[],
+        searchWord:""
+    }
+
+    components = {
+        searchAndClassification:SearchAndClassification
+    }
+
+    methods = {
+        //点击切换tab
+        clickTab(e) {
+            this.tabIndex = parseInt(e.currentTarget.dataset.index);
+        },
+ 
+        loadmore() {
+            this.updateList()
+        },
+
+        jumpToDetail(item) {
+            wx.navigateTo({
+                url:`/pages/dishWebViewPage?caipinId=${item.CaiPinId}&tabIndex=${this.tabIndex}`
+            })
+        },
+
+        collect(index) {
+            let state = wepy.$instance.checkUserLoginState()
+            if(!state) {
+                return 
+            }
+            console.log(index)
+            let item = this.list[index]
+            let collectState = item.IsCollect == 0 ? 1 : 0
+            let userInfo = wepy.$instance.globalData.userInfo
+            addActionRecord({	ModuleName:"菜品库",OpenId:userInfo.openId,UnionId:userInfo.unionId,RecordAction:"collect",RecordKeyType:"菜品",
+            RecordKeyId:item.CaiPinId,ActionFlag:collectState}).then(res => {
+                item.IsCollect = collectState
+                this.$apply()
+            })
+        }
+
+    }
+
+    watch = {   
+        //监听切换tab时刷新列表
+        tabIndex(nv, ov) {
+            this.clearList()
+            this.updateList()
+        }
+    }
+
+    events = {
+      'searchWord':(val) => {
+        console.log(val)
+        this.searchWord = val
+        this.clearList()
+        this.updateList()
+      }
+    }
+
+    clearList() {
+        this.loadFinish = false
+        this.pageIndex = 1  
+        this.list = []
+    }
+
+
+    
+    updateList() {
+        if(this.loadFinish) {
+            return
+        }
+
+        let type = '导师团'
+        if(this.tabIndex == 1) {
+            type = '星厨团'
+        }
+
+        let userInfo = wepy.$instance.globalData.userInfo
+        getXcxcCaiPinList({page:this.pageIndex,pagesize:this.pageSize,Type:type,CaiPinName:this.searchWord,OpenId:userInfo.openId,UnionId:userInfo.unionId}).then(res => {
+            let result = res
+            let list = result.data
+            let len = list.length
+  
+            this.list.push.apply(this.list,list)
+            console.log(this.list)
+            if(this.pageIndex >= result.totalpage || this.pageIndex * this.pageSize >= result.totalCount) {
+                this.loadFinish = true
+            }
+            this.pageIndex++
+            this.$apply()
+        })
+    }
+
+    onLoad() {
+        this.clearList()
+        this.updateList()
+    }
+
+}
+</script>
+<style lang="stylus" scoped>
+.starCuisineList
+    position relative
+    height calc(100vh - 120rpx)
+    .tab
+        display flex
+        position relative
+        background-color #fff
+        border-bottom 4rpx solid #F4F4F4
+        padding-left 130rpx
+        padding-right 130rpx
+        .tab-item-left,.tab-item-right
+            flex 1
+            height 80rpx
+            line-height 80rpx
+            font-size 30rpx
+            color: #3D3D3D
+            text-align center
+        .focus
+            color  #E93526
+        .tab-sign
+            width 126rpx
+            height 4rpx
+            background-color #E93526
+            position absolute
+            transition left 0.3s ease-out
+            bottom 0
+            transform translateX(-50%)
+        .left-0
+            left 34%
+        .left-1
+            left 66%
+    .list-container
+        position absolute
+        left 0
+        right 0
+        bottom 0
+        top 80rpx
+        .item
+            display flex
+            flex-direction column
+            justify-content flex-start
+            align-items flex-start
+            margin-left 20rpx
+            margin-top 37rpx
+            margin-right 20rpx            
+            padding-bottom 33rpx
+            border-bottom 1rpx solid #F1F1F1
+            .header
+                display flex
+                flex-direction row
+                align-items center
+                .img
+                    width 102rpx
+                    height 102rpx
+                    border-radius 50%
+                    background #fafafa
+                    border 1px solid #f1f1f1
+                .col
+                    display flex
+                    flex-direction column
+                    align-items flex-start
+                    margin-left 25rpx
+                    .name
+                        font-size 30rpx
+                        color #333333
+                        margin-top 20rpx
+                    .row
+                        margin-top 18rpx
+                        display flex
+                        flex-direction row
+                        align-items center
+                        font-size 24rpx
+                        color #888888
+                        .hotelName
+                            margin-left 20rpx
+            .dishPic
+                width 710rpx
+                height 350rpx
+                margin-top 33rpx
+            .browse
+                margin-top 26rpx
+                display flex
+                flex-direction row
+                justify-content space-between
+                align-items center                
+                width 100%
+                .left
+                    .dishName
+                        font-size 28rpx
+                        color #333333
+                .right
+                    display flex
+                    flex-direction row
+                    align-items center
+                    .collectIcon
+                        width 30rpx
+                        height 27rpx
+                    .count
+                        font-size 20rpx
+                        color #8C8C8C
+                        margin-left 25rpx
+
+
+</style>

@@ -1,0 +1,152 @@
+<template lang="pug">
+    view.basicInfo
+        swiper.swiper-block(circular="true"  indicator-dots="true" indicator-color="#C6C6C6" indicator-active-color="#E92F27" )
+            swiper-item.swiper-item
+                 video.video(src="{{basicInfo.videoUrl}}" controls)
+            block(wx:for="{{basicInfo.imageList}}" wx:key="index")
+                swiper-item.swiper-item
+                    image.img(mode="aspectFill" src="{{item}}")
+        view.row
+            view.name {{basicInfo.CaiPinName}}
+            view.browse {{basicInfo.LlCount}}人看过
+        view.row
+            view.describe 
+                block(wx:for="{{basicInfo.describe}}"  wx:key="index")
+                    text 【{{item}}】
+            view.like
+                block(wx:if="{{basicInfo.IsDianZan == 1}}")
+                     image.collectIcon(src="/assets/images/likeIcon.png" @tap="like")
+                     text.red {{basicInfo.DzCount}}
+                block(wx:else)
+                    image.collectIcon( src="/assets/images/unLikeIcon.png" @tap="like")
+                    text.normal {{basicInfo.DzCount}}
+
+</template>
+<script>
+import wepy from 'wepy'
+import { addActionRecord } from '@api/request'
+export default class basicInfo extends wepy.component{
+    props = {
+        info:{
+            type:Object,
+            default:{}
+        }
+    }
+
+    data = {
+        basicInfo:{}
+    }
+
+
+    watch = {        
+        info(newValue) {
+            if(newValue == undefined || newValue == "") {
+                return
+            }
+            this.basicInfo = this.formatData(newValue)   
+            this.$apply()
+        }
+
+    }
+
+    methods = {
+      like() {
+        let state = wepy.$instance.checkUserLoginState()
+        if(!state) {
+            return 
+        }
+        let likeState = this.basicInfo.IsDianZan == 0 ? 1 : 0
+        let userInfo = wepy.$instance.globalData.userInfo
+        addActionRecord({ModuleName:"菜品库",OpenId:userInfo.openId,UnionId:userInfo.unionId,RecordAction:"dianzan",RecordKeyType:"菜品",
+          RecordKeyId:this.basicInfo.CaiPinId,ActionFlag:likeState}).then(res => {
+            this.basicInfo.IsDianZan = likeState            
+            if(likeState == 1) {
+                this.basicInfo.DzCount++
+            }else{
+                this.basicInfo.DzCount--
+            }
+            this.$apply()
+          })
+      }
+    }
+
+    formatData(data) {
+        let result = data
+        let imageUrl = data.Images
+        if(imageUrl == null || imageUrl == "") {
+            result.imageList = []
+        }else{
+            result.imageList = imageUrl.split(",")
+        }
+        result.describe = []
+        if(result.CaiShi != null && result.CaiShi != "") {
+            result.describe = [...result.CaiShi.split(",")]
+        }
+        if(result.CaiXi != null && result.CaiXi != "") {
+             result.describe = [...result.describe , ...result.CaiXi.split(",")]
+        }
+        if(result.ShiCai != null && result.ShiCai != ""){
+            result.describe = [...result.describe , ...result.ShiCai.split(",")]
+        }
+        return result
+
+    }
+
+
+
+    onLoad() {
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.basicInfo
+    .swiper-block
+        height 750rpx
+        width 100%
+        background #6D6D6D
+        .swiper-item        
+            display  flex
+            flex-direction  column
+            justify-content  center
+        .video
+            width 750rpx
+            height 350rpx
+        .img
+            width 750rpx
+            height 750rpx
+    .row
+        display flex
+        flex-direction row
+        justify-content space-between
+        align-items center
+        margin-left 20rpx
+        margin-right 20rpx
+        margin-top 30rpx
+        .name 
+            font-size 30rpx
+            color #3E3E3E
+        .browse
+            font-size 24rpx
+            color #8C8C8C
+        .describe
+            font-size 26rpx
+            color #E92F27
+        .like
+            display flex
+            flex-direction row
+            align-items center
+            image 
+                width 32rpx
+                height 32rpx
+            .normal
+                font-size 24rpx
+                color #8C8C8C
+                margin-left 17rpx
+            .red
+                font-size 24rpx
+                color #E92F27
+                margin-left 17rpx
+
+
+
+</style>

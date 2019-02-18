@@ -1,0 +1,166 @@
+<template lang="pug">
+    view.popularityOfTheMonth(wx:if="{{popularityOfTheMonthData.length > 0}}")
+      view.header( @tap="jumpToPopularityPage")
+        text.title 当月人气
+        image.in(src="/assets/images/rightArrow.png" )
+      navigator.first( url="/pages/dishDetailsPage?caiPinId={{popularityOfTheMonthData[0].CaiPinId}}" hover-class="none")
+        image.pic(src="{{popularityOfTheMonthData[0].pic}}")
+          image.bd(src="/assets/images/numberBackground.png")
+          text.serial 1
+        view.content
+          text.name {{popularityOfTheMonthData[0].CaiPinName}}
+          view.browse
+              image.collectIcon(wx:if="{{popularityOfTheMonthData[0].IsCollect == 1}}" src="/assets/images/collectedIcon.png" @tap.stop="collect(0)")
+              image.collectIcon(wx:if="{{popularityOfTheMonthData[0].IsCollect == 0}}" src="/assets/images/unCollectedIcon.png" @tap.stop="collect(0)")
+              text {{popularityOfTheMonthData[0].LlCount}}人看过
+          text.reasontitle  上榜理由
+          text.reason {{popularityOfTheMonthData[0].Sbly}}
+      navigator.second(wx:if="{{popularityOfTheMonthData.length > 1}}" url="/pages/dishDetailsPage?caiPinId={{popularityOfTheMonthData[1].CaiPinId}}" hover-class="none")
+        image.pic(src="{{popularityOfTheMonthData[1].pic}}")
+          image.bd(src="/assets/images/numberBackground.png")
+          text.serial 2
+        view.content
+          text.name {{popularityOfTheMonthData[1].CaiPinName}}
+          view.browse
+              image.collectIcon(wx:if="{{popularityOfTheMonthData[1].IsCollect == 1}}" src="/assets/images/collectedIcon.png" @tap.stop="collect(1)")
+              image.collectIcon(wx:if="{{popularityOfTheMonthData[1].IsCollect == 0}}" src="/assets/images/unCollectedIcon.png" @tap.stop="collect(1)")
+              text {{popularityOfTheMonthData[1].LlCount}}人看过
+          text.reasontitle  上榜理由
+          text.reason {{popularityOfTheMonthData[1].Sbly}}
+</template>
+<script>
+import wepy from 'wepy'
+import { getPopularityOfTheMonth } from '@api/request'
+import { addActionRecord } from '@api/request'
+import { removeTags } from '@util/util'
+export default class popularityOfTheMonth extends wepy.component{
+    data = {
+      popularityOfTheMonthData:[]
+    }
+
+    methods = {
+      collect(index) {
+        let state = wepy.$instance.checkUserLoginState()
+        if(!state) {
+            return 
+        }
+        let item = this.popularityOfTheMonthData[index]
+        let collectState = item.IsCollect == 0 ? 1 : 0
+        let userInfo = wepy.$instance.globalData.userInfo
+        addActionRecord({	ModuleName:"菜品库",OpenId:userInfo.openId,UnionId:userInfo.unionId,RecordAction:"collect",RecordKeyType:"菜品",
+          RecordKeyId:item.CaiPinId,ActionFlag:collectState}).then(res => {
+            item.IsCollect = collectState
+            this.$apply()
+          })
+      },
+
+      jumpToPopularityPage() {
+        wx.navigateTo({
+          url:"/pages/popularityOfMonthPage"
+        })
+      }
+    }
+
+    init() {
+      let userInfo = wepy.$instance.globalData.userInfo
+      getPopularityOfTheMonth({OpenId:userInfo.openId,UnionId:userInfo.unionId}).then(res => {
+        let popularityOfTheMonthData = res
+        let len = popularityOfTheMonthData.length
+        for(let i = 0; i < len; i++) {
+          popularityOfTheMonthData[i].pic = popularityOfTheMonthData[i].Images.split(",")[0]
+          popularityOfTheMonthData[i].Sbly = removeTags(popularityOfTheMonthData[i].Sbly)
+        }
+        console.log(popularityOfTheMonthData)
+        this.popularityOfTheMonthData = popularityOfTheMonthData
+        wx.setStorageSync("popularityOfTheMonthData",popularityOfTheMonthData)
+        console.log(this.popularityOfTheMonthData )
+        this.$apply()
+      })
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.popularityOfTheMonth
+    display flex
+    flex-direction column
+    align-items center
+    padding-top 39rpx 
+    border-top 11rpx solid #F8F8F8 
+    position relative
+    .header
+      width 100%
+      position relative
+      text-align center      
+      margin-bottom 49rpx
+      .title 
+        font-size 32rpx
+        color #3E3E3E
+        font-weight bold
+        width 128rpx
+        padding-bottom 13rpx
+        border-bottom 4rpx solid #E6222D
+      .in
+        width 16rpx
+        height 28rpx
+        position absolute
+        top 15rpx
+        right 20rpx
+    .first,.second
+      display flex
+      flex-direction row
+      justify-content flex-start
+      width 100%
+      margin-bottom 36rpx
+      .pic
+        width 312rpx
+        height 312rpx
+        margin-left 20rpx
+        margin-right 23rpx
+        position relative
+        flex-shrink 0
+        .bd
+          width 50rpx
+          height 52rpx
+          top 0rpx
+          left 16rpx
+          position absolute
+        .serial
+          font-size 30rpx
+          color #ffffff
+          left 32rpx
+          top 5rpx
+          position absolute
+          font-family:HiraginoSansGB-W3;
+      .content
+        display flex
+        flex-direction column
+        .name 
+          font-size 30rpx
+          color #3E3E3E
+          margin-top 16rpx
+        .browse
+          display flex
+          flex-direction row
+          align-items center
+          margin-top 20rpx
+          .collectIcon
+            width 30rpx
+            height 27rpx
+          text 
+            font-size 20rpx
+            color #8C8C8C
+            margin-left 25rpx
+        .reasontitle
+          font-size 24rpx
+          color #3E3E3E
+          margin-top 56rpx
+        .reason
+          font-size 20rpx
+          color #8C8C8C
+          margin-top 26rpx
+          max-width 356rpx
+          display  -webkit-box
+          -webkit-box-orient  vertical
+          -webkit-line-clamp  3
+          overflow  hidden
+</style>

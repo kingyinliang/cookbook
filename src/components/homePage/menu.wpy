@@ -1,0 +1,42 @@
+<template lang="pug">
+    view.menu
+      navigator.menuCell( url="/pages/allCategoryPage")
+        image(src="/assets/images/allRecipesIcon.png")
+        text 全部菜谱
+      navigator.menuCell( url="/pages/starCuisinePage")
+        image(src="/assets/images/starCuisineIcon.png")
+        text 星厨星菜
+      navigator.menuCell( url="/pages/videoDishPage")
+        image(src="/assets/images/videoLearnDishIcon.png")
+        text 视频学菜
+      navigator.menuCell( url="/pages/allKindsOfTastePage")
+        image(src="/assets/images/allKindsOfTasteIcon.png")
+        text 千滋百味
+</template>
+<script>
+import wepy from 'wepy'
+export default class menu extends wepy.component{
+    
+}
+</script>
+<style lang="stylus" scoped>
+.menu
+    display flex
+    flex-direction row
+    padding-left 34rpx
+    padding-right 37rpx
+    padding-bottom 40rpx
+    .menuCell
+        display flex
+        flex-direction column
+        flex 1
+        align-items center
+        image
+            width 84rpx
+            height 84rpx
+        text
+            color #3E3E3E
+            font-size 26rpx
+            width 106rpx
+            margin-top 29rpx
+</style>

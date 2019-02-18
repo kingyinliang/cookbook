@@ -1,0 +1,168 @@
+<template lang="pug">
+    view.searchAndClassification
+      view.search-bar
+            view.search-bar-box
+                input.search-bar-input(
+                    type="text"
+                    placeholder="{{placeHolderText}}"
+                    placeholder-class = "placeholderClass"
+                    value="{{textVal}}"
+                    @input="typing"
+                    @confirm="enter"
+                    auto-focus
+                    )            
+                view.associationalWord(wx:if="{{associationalWordList.length > 0 && showAssociationalWord}}")
+                    view.item(wx:for="{{associationalWordList}}" wx:key="index" @tap="searchItem({{item}})")
+                        text {{item.CaiPinName}}    
+                image.icon-search-in-box(src="/assets/images/searchIcon.png"  @tap="clickBtn")
+     
+      navigator.classification(url='/pages/allCategoryPage' hover-class="none")
+        text 分类
+        image(src="/assets/images/classificationIcon.png")
+</template>
+<script>
+import wepy from 'wepy'
+import { getCaiPinNameListByParms } from '@api/request'
+export default class searchAndClassification extends wepy.component{    
+    data = {
+      placeHolderText:"搜索菜名\\食材",   
+      textVal:"",
+      associationalWordList:[]
+    }
+
+    props = {
+        initVal:{
+            type:String,
+            default:""
+        },
+        showAssociationalWord:{
+            type: [Boolean, String],
+            default: false,
+            coerce(v) {
+                return typeof v === 'string' ? JSON.parse(v) : v
+            }
+        }
+    }
+
+    watch = {
+        initVal(newValue) {
+            this.textVal = newValue
+            this.$apply()
+        }
+    }
+
+    methods = {
+        typing(e) {
+            this.textVal = e.detail.value
+            console.log(this.textVal)
+            getCaiPinNameListByParms({CpName:this.textVal}).then(res => {
+                this.associationalWordList = res
+                console.log(this.associationalWordList)
+                this.$apply()
+            })
+        },
+
+        enter() {
+            this.searchWords()
+        },
+
+        clickBtn() {
+           this.searchWords()
+        },
+
+        searchItem(item) {
+            this.textVal = item.CaiPinName
+            this.searchWords()
+        },
+
+    }
+
+    clear() {
+        this.textVal = ""
+        this.initVal = ""
+        this.associationalWordList = []
+        this.$apply()
+    }
+
+    searchWords() {
+        if(this.textVal == "") {
+            return
+        }
+        this.$emit('searchWord',this.textVal)
+ 
+    }
+
+    onLoad() {
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.searchAndClassification
+    display flex
+    flex-direction row
+    justify-content flex-start
+    align-items center
+    margin-top 26rpx
+    margin-bottom 26rpx
+    .search-bar
+      display flex
+      flex-direction row
+      justify-content flex-start
+      align-items center
+      height 68rpx
+      background white
+      .search-bar-box
+          position relative
+          width 537rpx
+          height 68rpx
+          margin-left 20rpx
+          margin-right 72rpx
+          .icon-search-in-box
+              position absolute
+              right 26rpx
+              top 16rpx
+              width 32rpx
+              height 32rpx
+              z-index 2
+          .search-bar-input
+              width 451rpx
+              height 68rpx
+              background  #F8F8F8
+              border-radius  10rpx
+              padding-left 26rpx
+              padding-right 60rpx
+              font-size  26rpx
+              color  #A5A4A4
+              .placeholderClass
+                  color: #A5A4A4
+          .associationalWord
+              position absolute
+              top 68rpx
+              left 0rpx
+              display flex
+              flex-direction column
+              border-radius 10rpx
+              background #F8F8F8
+              z-index 2
+              .item
+                height 72rpx
+                line-height 72rpx
+                padding-left 20rpx
+                width 517rpx
+                border-top 1rpx solid #F1F1F1
+                color #A5A4A4
+                font-size 26rpx
+    .classification
+      display flex
+      flex-direction row
+      justify-content flex-start
+      align-items center
+      text
+        color #3E3E3E
+        font-size 22rpx
+        width 45rpx
+      image 
+        width 43rpx
+        height 30rpx
+        margin-left 13rpx
+</style>

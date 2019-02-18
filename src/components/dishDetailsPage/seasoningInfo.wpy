@@ -1,0 +1,169 @@
+<template lang="pug">
+    view.seasoningInfo
+        view.title
+            image.icon(src="/assets/images/seasoningIcon.png")
+            text 备料展示
+        view.row
+            text.header 主料 {{seasoningInfo.Zhuliao}}
+            view.item(wx:for="{{seasoningInfo.ZhuLiao.Data}}" wx:key="index")
+                view.name   {{item.Name}}
+                view.right
+                    view.amount {{item.Amount}}                
+                    view.unit   {{item.Unit}}
+        view.row 
+            text.header 辅料
+            view.item(wx:for="{{seasoningInfo.FuLiao.Data}}" wx:key="index")
+                view.name   {{item.Name}}
+                view.right
+                    view.amount {{item.Amount}}                
+                    view.unit   {{item.Unit}}
+        view.row
+            text.header 调料
+            view.item(wx:for="{{seasoningInfo.TiaoLiao}}" wx:key="index")
+                view.left( @tap="goToProductList({{item}})")
+                    view.name   {{item.Name}}
+                    image(wx:if="{{item.ProductId > 0}}" src="/assets/images/blackRightArrow.png")
+                view.right
+                    view.amount {{item.Amount}}                
+                    view.unit   {{item.Unit}}
+        view.cookingSteps
+            image.icon(src="/assets/images/cookingStepsIcon.png")
+            text 烹饪步骤
+        view.list
+            view.item(wx:for="{{seasoningInfo.stepList}}" wx:key="index")
+                text {{item}}
+</template>
+<script>
+import wepy from 'wepy'
+import { getCaiPinMaterialById } from '@api/request'
+import { htmlParse } from '@util/util'
+export default class seasoningInfo extends wepy.component{
+    props = {
+        caiPinId:{
+            type:String,
+            default:""
+        }
+    }
+
+    data = {
+        seasoningInfo:{}
+    }
+
+    watch = {
+        caiPinId(newValue) {
+            console.log(newValue)
+            if(newValue == undefined || newValue == "") {
+                return
+            }
+            this.caiPinId = newValue
+            this.updateData()
+        }
+    }
+
+    methods = {
+        goToProductList(item) {
+            if(item.ProductId == 0) {
+                return
+            }
+
+            wx.navigateTo({
+                url:`/pages/productListPage?productId=${item.ProductId}`
+            })
+        }
+    }
+
+    updateData() {
+        getCaiPinMaterialById({caiPinId:this.caiPinId}).then(res => {
+            let data = this.formatData(res)
+            this.seasoningInfo = data
+            console.log(data)
+            this.$apply()
+        })
+    }
+
+    formatData(data) {
+        let htmlParseData = htmlParse(data.Steps)    
+        data.stepList = htmlParseData[0]
+        return  data
+    }
+
+}
+</script>
+<style lang="stylus" scoped>
+.seasoningInfo
+    display flex
+    flex-direction column
+    margin-top 60rpx
+    .title
+        display flex
+        flex-direction row
+        align-items center
+        margin-bottom 37rpx
+        padding-left 20rpx
+        .icon
+            width 34rpx
+            height 32rpx
+        text
+            font-size 30rpx
+            color #E92F27
+            margin-left 23rpx
+    .row
+        display flex
+        flex-direction column
+        margin-top 34rpx
+        .header
+            // width 100%
+            height 63rpx
+            line-height 63rpx
+            background #F9F9F9
+            padding-left 20rpx
+            margin-bottom 13rpx
+        .item
+            padding-left 20rpx
+            padding-right 20rpx
+            margin-top 22rpx
+            display flex
+            flex-direction row
+            align-items center
+            justify-content space-between
+            .name
+                font-size 28rpx
+                color #3E3E3E
+            .right
+                display flex
+                flex-direction row
+                .amount,.unit
+                    font-size 26rpx
+                    color #6C6C6C
+            .left
+                display flex
+                flex-direction row
+                align-items center
+            image
+                width 11rpx
+                height 22rpx
+                margin-left 18rpx
+    .cookingSteps
+        margin-top 60rpx
+        display flex
+        flex-direction row
+        align-items center
+        margin-bottom 37rpx
+        padding-left 20rpx
+        .icon
+            width 34rpx
+            height 32rpx
+        text
+            font-size 30rpx
+            color #E92F27
+            margin-left 23rpx
+    .list
+        display flex
+        flex-direction column
+        .item
+            padding-left 20rpx
+            padding-right 20rpx
+            font-size 28rpx
+            color #000000
+            margin-top 10rpx
+</style>        

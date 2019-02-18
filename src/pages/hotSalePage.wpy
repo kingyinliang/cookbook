@@ -1,0 +1,213 @@
+<template lang="pug">
+     view.hotSalePage
+        searchAndClassification( :initVal.sync="searchWord")
+        view.hotSalePageList
+            view.tab
+                view.tab-item-left(class="{{tabIndex===0?'focus':''}}" data-index=0 @tap="clickTab") 更新时间
+                view.tab-item-right(class="{{tabIndex===1?'focus':''}}" data-index=1 @tap="clickTab") 人气
+                view.tab-sign(class="left-{{tabIndex}}")
+            scroll-view.list-container(
+                scroll-y 
+                @scrolltolower="loadmore"
+                lower-threshold="{{updataDistance}}"
+                )
+                view.row
+                    block(wx:for="{{list}}" wx:key="index")
+                        navigator.item( url="/pages/dishDetailsPage?caiPinId={{item.CaiPinId}}" hover-class="none")
+                            image.img(src="{{item.pic}}")
+                            text.location(wx:if="{{!!item.CityName}}")  {{item.CityName}}
+                            text.name {{item.CaiPinName}}
+                            view.browse
+                                image.collectIcon(wx:if="{{item.IsCollect == 1}}" src="/assets/images/collectedIcon.png" @tap.stop="collect({{index}})")
+                                image.collectIcon(wx:if="{{item.IsCollect == 0}}" src="/assets/images/unCollectedIcon.png" @tap.stop="collect({{index}})")
+                                text {{item.LlCount}}人看过
+</template>
+<script>
+import wepy from 'wepy'
+import { getCaiPinListByParms,addActionRecord } from '@api/request'
+import SearchAndClassification from '@components/search/searchAndClassification' 
+export default class hotSalePage extends wepy.page{
+    config = {
+        navigationBarTitleText:"旺店热卖"
+    }
+
+    data = {
+        tabIndex: 0,
+        updataDistance: 300, 
+        list:[],
+        pageIndex:1,
+        pageSize:10,
+        loadFinish:false,
+        word:""
+    }
+
+    components = {
+        searchAndClassification:SearchAndClassification
+    }
+
+
+    methods = {
+        //点击切换tab
+        clickTab(e) {
+            this.tabIndex = parseInt(e.currentTarget.dataset.index);
+        },
+ 
+        loadmore() {
+            this.updateList()
+        },
+
+        collect(index) {
+            let state = wepy.$instance.checkUserLoginState()
+            if(!state) {
+                return 
+            }
+            let item = this.list[index]
+            let collectState = item.IsCollect == 0 ? 1 : 0
+            let userInfo = wepy.$instance.globalData.userInfo
+            addActionRecord({ModuleName:"菜品库",OpenId:userInfo.openId,UnionId:userInfo.unionId,RecordAction:"collect",RecordKeyType:"菜品",
+                RecordKeyId:item.CaiPinId,ActionFlag:collectState}).then(res => {
+                item.IsCollect = collectState
+                this.$apply()
+            })
+        }
+
+    }
+
+    watch = {
+         //监听切换tab时刷新列表
+        tabIndex(nv, ov) {
+            this.clearList()
+            this.updateList()
+        }
+    }
+
+    events = {
+      'searchWord':(val) => {
+        console.log(val)
+        this.word = val
+        this.clearList()
+        this.updateList()
+      }
+    }
+
+    clearList() {
+        this.loadFinish = false
+        this.pageIndex = 1  
+        this.list = []
+    }
+
+    updateList() {
+        if(this.loadFinish) {
+            return
+        }
+
+        let orderField = 'UpdateDate'
+        if(this.tabIndex == 1) {
+            orderField = 'RenQi'
+        }
+        let userInfo = wepy.$instance.globalData.userInfo
+        getCaiPinListByParms({page:this.pageIndex,pagesize:this.pageSize,OrderBy:orderField,CaiPinName:this.word,BanKuaiName:"旺店热卖",OpenId:userInfo.openId,UnionId:userInfo.unionId}).then(res => {
+            let result = res
+            console.log(res)
+            let list = result.data
+            let len = list.length
+            for(let i = 0; i < len; i++) {
+                if(list[i].Images != null) {
+                    list[i].pic = list[i].Images.split(",")[0]
+                }               
+            }
+            this.list.push.apply(this.list,list)
+            console.log(this.list)
+            if(this.pageIndex >= result.totalpage || this.pageIndex * this.pageSize >= result.totalCount) {
+                this.loadFinish = true
+            }
+            this.pageIndex++
+            this.$apply()
+        })
+    }
+
+    onLoad() {
+        this.clearList()
+        this.updateList()
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.hotSalePageList
+    position relative
+    height calc(100vh - 120rpx)
+    .tab
+        display flex
+        position relative
+        background-color #fff
+        border-bottom 4rpx solid #F4F4F4
+        padding-left 130rpx
+        padding-right 130rpx
+        .tab-item-left,.tab-item-right
+            flex 1
+            height 80rpx
+            line-height 80rpx
+            font-size 30rpx
+            color: #3D3D3D
+            text-align center
+        .focus
+            color  #E93526
+        .tab-sign
+            width 126rpx
+            height 4rpx
+            background-color #E93526
+            position absolute
+            transition left 0.3s ease-out
+            bottom 0
+            transform translateX(-50%)
+        .left-0
+            left 34%
+        .left-1
+            left 66%
+    .list-container
+        position absolute
+        left 0
+        right 0
+        bottom 0
+        top 80rpx
+        .row .item:nth-child(2n+4)
+            margin-top 87rpx
+        .row
+            display flex
+            flex-direction row
+            flex-wrap wrap
+            justify-content flex-start
+            align-items flex-start
+            align-self flex-start
+            .item
+                display flex
+                flex-direction column
+                margin-top 33rpx
+                margin-bottom 20rpx
+                margin-left 20rpx
+                .img
+                    width 346rpx
+                    height 346rpx
+                    margin-bottom 18rpx
+                .location
+                    font-size 28rpx
+                    color #E6222D  
+                .name
+                    font-size 28rpx
+                    color #333333
+                    margin-top 29rpx
+                    max-width 346rpx
+                .browse
+                    display flex
+                    flex-direction row
+                    align-items center          
+                    margin-top 25rpx
+                    .collectIcon
+                        width 30rpx
+                        height 27rpx
+                    text 
+                        font-size 20rpx
+                        color #8C8C8C
+                        margin-left 22rpx
+</style>
+

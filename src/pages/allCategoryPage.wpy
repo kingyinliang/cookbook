@@ -1,0 +1,149 @@
+<template lang="pug">
+    view.allCategoryPage
+        view.firstCategory(wx:for="{{allCategoryList}}" wx:key="FirstId" wx:for-index="firstIndex" wx:for-item="firstItem")
+            view.header
+                view.leftLine
+                text {{firstItem.FirstName}}
+                view.rightLine
+            view.content
+                view.secondCategory(wx:for="{{firstItem.SecondList}}" wx:key="SecondId" wx:for-index="secondIndex" wx:for-item="secondItem" 
+                class="{{secondItem.checked ? 'active' : ''}}" @tap="select({{firstIndex}},{{secondIndex}})")
+                    text {{secondItem.SecondName}}
+        view.total
+            text {{totalText}}
+        view.btn( @tap="ok") 确定
+            
+</template>
+<script>
+import wepy from 'wepy'
+import { getAllCategory } from '@api/request'
+export default class allCategoryPage extends wepy.page{
+    config = {
+        navigationBarTitleText:"菜谱"
+    }
+
+    data = {
+        allCategoryList:[],
+        allAmount:0,
+        total:0,
+        idSet:new Set()
+    }
+
+    computed = {
+        totalText() {
+            if(this.idSet.size == 0) {
+                return `总共 ( ${this.allAmount}道 )`
+            }else{
+                return `总共 ( ${this.total}道 )`
+            }
+
+        }
+    }
+
+    methods = {
+        select(firstIndex,secondIndex) {
+            let item = this.allCategoryList[firstIndex].SecondList[secondIndex]
+            item.checked = !item.checked
+            if(item.checked) {
+                this.idSet.add(item.SecondId)
+                this.total += item.Total
+            }else{
+                this.idSet.delete(item.SecondId)
+                this.total -= item.Total
+            }
+            console.log(this.allCategoryList)
+            this.$apply()
+        },
+        ok() {
+
+            if(this.idSet.size == 0) {
+                return
+            }
+            let secondIdList = [...this.idSet].join(",")
+            wx.navigateTo({url:`searchPage?secondIdList=${secondIdList}`})
+            console.log(secondIdList)
+        }
+        
+    }
+
+    onLoad() {
+        getAllCategory({}).then(res => {
+            let result = res
+            let len = result.length
+            let total = 0
+            for(let i = 0; i < len; i++) {
+                total += result[i].Total
+                let inLen = result[i].SecondList.length
+                for(let j = 0; j < inLen; j++) {
+                    result[i].SecondList[j].checked = false
+                }
+            }
+            console.log(result)
+            this.allAmount = total
+            this.allCategoryList = result
+            this.$apply()
+        })
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.allCategoryPage
+    display flex
+    flex-direction column
+    .firstCategory
+        display flex
+        flex-direction column
+        align-items center
+        margin-top 65rpx
+        .header
+            display flex
+            flex-direction row
+            justify-content center
+            align-items center
+            .leftLine,.rightLine
+                width 70rpx
+                height 2rpx
+                background #E91E24
+            text 
+                font-size 32rpx
+                color #E91E24
+                margin-left 11rpx
+                margin-right 11rpx
+        .content
+            display flex
+            flex-direction row
+            flex-wrap wrap
+            justify-content flex-start
+            align-items center
+            .secondCategory
+                width 226rpx
+                height 80rpx
+                line-height 80rpx
+                background #F4F4F4
+                border-radius 10rpx
+                font-size 30rpx
+                color #333333
+                margin-top 30rpx
+                margin-left 20rpx
+                text-align center
+            .active
+                background #E91E24
+                color #ffffff
+    .total
+        font-size 30rpx
+        color #E73229
+        margin 0 auto         
+        margin-top 70rpx
+        text-align center
+    .btn
+        width 680rpx
+        height 84rpx
+        line-height 84rpx
+        background #E73229
+        border-radius 10rpx
+        text-align center
+        margin 0 auto        
+        margin-top 57rpx
+        margin-bottom 40rpx
+        color #fff
+</style>

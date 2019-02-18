@@ -1,0 +1,85 @@
+
+<template lang="pug">
+  view
+</template>
+
+
+<script>
+  import wepy from 'wepy'    
+  import { getOpenId, decryptData } from '@api/request'
+  export default class Index extends wepy.page {
+
+  
+    onLoad() {
+      // wx.redirectTo({url:"/pages/mainPage"})
+      let loginFlag = wx.getStorageSync('unionId')      
+      let userInfo = wepy.$instance.globalData.userInfo
+      if(loginFlag != "") { //// 已经登录过
+        userInfo.openId =  wx.getStorageSync('openId')   
+        userInfo.unionId =  wx.getStorageSync('unionId')     
+        wx.redirectTo({url:"/pages/mainPage"})
+      }else{// 还没有登录
+        wx.login({
+          success:res => {
+            console.log(res.code)
+            getOpenId({code:res.code}).then(res => {
+              console.log(res)
+              userInfo.openId = res.data.openid
+              if(res.data.unionid == undefined || res.data.flag == 'false') {//没有unionid或者后台没有用户信息情形
+                console.log("need userinfo")
+                this.needUserInfo()
+              }else{
+                userInfo.unionId = res.data.unionid
+                wx.setStorageSync('unionId',userInfo.unionId)
+                wx.setStorageSync('openId',userInfo.openId)
+                wx.redirectTo({url:"/pages/mainPage"})
+              }
+            })
+
+          }
+        })
+      }
+
+    }
+
+
+    //需要用户信息的情况
+    needUserInfo() {
+      let userInfo = wepy.$instance.globalData.userInfo
+      wx.getSetting({
+            success:res => {
+              if (!res.authSetting['scope.userInfo']) {//未授权
+                console.log("no authorize")
+                wx.redirectTo({url:"/pages/authorizePage"})
+              }else{//已授权
+                wx.getUserInfo({
+                  lang: "zh_CN",
+                  withCredentials:true,
+                  success:res => {
+                    console.log(res)
+                    let encryptedData = res.encryptedData
+                    let iv = res.iv
+                    decryptData({encryptedData:encryptedData,iv:iv,openId:userInfo.openId}).then(res => {
+                      console.log(res)
+                      if(res.unionId != undefined) {
+                        userInfo.unionId = res.unionId
+                        wx.setStorageSync('unionId',userInfo.unionId)                        
+                        wx.setStorageSync('openId',userInfo.openId)
+                      }
+                      wx.redirectTo({url:"/pages/mainPage"})
+                    })
+                  }
+                })
+              }
+            }
+          })
+    }
+
+    onShow() {
+    }
+
+  }
+</script>
+<style lang="stylus">
+</style>
+

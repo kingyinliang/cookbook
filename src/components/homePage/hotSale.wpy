@@ -1,0 +1,109 @@
+<template lang="pug">
+    view.hotSale
+      navigator.header( url="/pages/hotSalePage" hover-class="none")
+          text.title 旺店热卖
+          image.in(src="/assets/images/rightArrow.png" )
+      view.row
+        block(wx:for="{{hotSaleData}}" wx:key="index")
+          navigator.item(wx:if="{{4 > index}}" url="/pages/dishDetailsPage?caiPinId={{item.CaiPinId}}" hover-class="none")
+              image.img(src="{{item.pic}}")
+              text.location(wx:if="{{!!item.CityName}}")   {{item.CityName}}
+              text.name {{item.CaiPinName}}
+              view.browse
+                  image.collectIcon(wx:if="{{item.IsCollect == 1}}" src="/assets/images/collectedIcon.png" @tap.stop="collect({{index}})")
+                  image.collectIcon(wx:if="{{item.IsCollect == 0}}" src="/assets/images/unCollectedIcon.png" @tap.stop="collect({{index}})")
+                  text {{item.LlCount}}人看过
+</template>
+<script>
+import wepy from 'wepy'
+import { addActionRecord } from '@api/request'
+export default class hotSale extends wepy.component{
+    props = {
+        hotSaleData:{
+            type:Array,
+            default:[]
+        }
+    }
+
+    methods = {
+      collect(index) {
+        let state = wepy.$instance.checkUserLoginState()
+        if(!state) {
+            return 
+        }
+        let item = this.hotSaleData[index]
+        let collectState = item.IsCollect == 0 ? 1 : 0
+        let userInfo = wepy.$instance.globalData.userInfo
+        addActionRecord({	ModuleName:"菜品库",OpenId:userInfo.openId,UnionId:userInfo.unionId,RecordAction:"collect",RecordKeyType:"菜品",
+          RecordKeyId:item.CaiPinId,ActionFlag:collectState}).then(res => {
+            item.IsCollect = collectState
+            this.$apply()
+          })
+      }
+    }
+}
+</script>
+<style lang="stylus" scoped>
+.hotSale
+    display flex
+    flex-direction column
+    align-items center
+    padding-top 39rpx 
+    border-top 11rpx solid #F8F8F8 
+    position relative
+    margin-bottom 10rpx
+    .header
+      width 100%
+      position relative
+      text-align center      
+      margin-bottom 13rpx
+      .title 
+        font-size 32rpx
+        color #3E3E3E
+        font-weight bold
+        width 128rpx
+        padding-bottom 13rpx
+        border-bottom 4rpx solid #E6222D
+      .in
+        width 16rpx
+        height 28rpx
+        position absolute
+        top 15rpx
+        right 20rpx
+    .row
+      display flex
+      flex-direction row
+      flex-wrap wrap
+      justify-content flex-start
+      align-items flex-start
+      align-self flex-start
+      .item
+        display flex
+        flex-direction column
+        margin-top 33rpx
+        margin-bottom 20rpx
+        margin-left 20rpx
+        .img
+          width 346rpx
+          height 346rpx
+          margin-bottom 18rpx
+        .location
+          font-size 28rpx
+          color #E6222D  
+        .name
+          font-size 28rpx
+          color #333333
+          margin-top 29rpx
+        .browse
+          display flex
+          flex-direction row
+          align-items center          
+          margin-top 25rpx
+          .collectIcon
+            width 30rpx
+            height 27rpx
+          text 
+            font-size 20rpx
+            color #8C8C8C
+            margin-left 22rpx
+</style>

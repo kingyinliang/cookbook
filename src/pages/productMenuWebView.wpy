@@ -1,0 +1,28 @@
+<template lang="pug">
+  <web-view src='{{url}}'></web-view>
+</template>
+<script>
+import wepy from 'wepy'
+export default class productMenuWebView extends wepy.page{
+  data  = {
+    urlList:[
+      'https://jifenweixin.shinho.net.cn/#/component/specialoyster',
+      'https://jifenweixin.shinho.net.cn/#/component/specialsoup',
+      'https://jifenweixin.shinho.net.cn/#/component/specialsoy',
+      'http://i.eqxiu.com/s/r9XPnzyh',
+      'https://mp.weixin.qq.com/s/7Ps9enYT5Pk9gVNgLE35SQ',
+      'https://jifenweixin.shinho.net.cn/#/component/special'
+    ],
+    url:""
+  }
+
+  onLoad(options) {
+    let index = options.index
+    this.url = this.urlList[index]
+    console.log(this.url)
+  }
+}
+</script>
+<style lang="stylus" scoped>
+
+</style>
